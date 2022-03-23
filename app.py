@@ -27,7 +27,6 @@ st.markdown('''
 ''')
 st.caption('''
 ## **Explanatory Data Analysis** 
-
 ''')
 
 # Upload CSV data
