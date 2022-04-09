@@ -1,55 +1,63 @@
-# -*- coding: utf-8 -*-
 """
-Created on Wed Mar 23 09:53:32 2022
-
+Created on Wed Mar 31 09:53:32 2022
 @author: __mitchew__
 """
-
-import numpy as np
-import pandas as pd
 import streamlit as st
-from pandas_profiling import ProfileReport
-from streamlit_pandas_profiling import st_profile_report
+import pandas as pd
+from lazypredict.Supervised import LazyRegressor
+from sklearn.model_selection import train_test_split
 
-st.set_page_config(page_title="Sparta X", page_icon=None, layout="centered", initial_sidebar_state="auto")
+st.set_page_config(page_title='Machine Learning Algorithm Comparison',
+    layout='wide')
 
-st.markdown('<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">', unsafe_allow_html=True)
+def build_model(df):
+    df = df.loc[:100] 
+    X = df.iloc[:,:-1] 
+    Y = df.iloc[:,-1]  
 
-st.markdown("""
-<nav class="navbar fixed-top navbar-expand-lg navbar-dark" style="background-color: #DCDCDC;">
-  <a class="navbar-brand" target="_blank">Sparta X</a>
-</nav>
-""", unsafe_allow_html=True)
+    st.markdown('**Variable details**:')
+    st.write('X variable ')
+    st.info(list(X.columns[:20]))
+    st.write('Y variable')
+    st.info(Y.name)
 
-# Web App Title
-st.markdown('''
-# **EDA for Sparta X** 
-''')
-st.caption('''
-## **Explanatory Data Analysis** 
-''')
+    # Build lazy model
+    X_train, X_test, Y_train, Y_test = train_test_split(X, Y,test_size = split_size,random_state = 0)
+    reg = LazyRegressor(verbose=0,ignore_warnings=False, custom_metric=None)
+    models_train,predictions_train = reg.fit(X_train, X_train, Y_train, Y_train)
+    models_test,predictions_test = reg.fit(X_train, X_test, Y_train, Y_test)
+    
 
-# Upload CSV data
-with st.sidebar.header('Upload your CSV data'):
+    st.subheader('2. Table of Model Performance')
+
+    st.write('Training set')
+    st.write(predictions_train)
+
+st.write("""
+### Sparta X ML Algorithm Comparison
+""")
+
+
+with st.sidebar.header('1. Upload your CSV data'):
     uploaded_file = st.sidebar.file_uploader("Upload your input CSV file", type=["csv"])
 
+with st.sidebar.header('2. Set Parameters'):
+    split_size = st.sidebar.slider('Data split ratio (% for Training Set)', 10, 90, 80, 5)
+    #seed_number = st.sidebar.slider('Set the random seed number', 1, 100, 42, 1)
 
-# Pandas Profiling Report
+    # Sidebar - Independent Variable
+    Independent_var = ['date', 'store', 'item']
+    selected_Independent_var = st.sidebar.multiselect('Independent Variable', Independent_var, Independent_var)
+    # Sidebar - Dependent Variable
+    Dependent_var = ['sales','date', 'store', 'item' ]
+    selected_Dependent_var = st.sidebar.selectbox('Dependent Variable', Dependent_var)
+
+st.subheader('1. Dataset')
+
 if uploaded_file is not None:
-    @st.cache
-    def load_csv():
-        csv = pd.read_csv(uploaded_file)
-        return csv
-    df = load_csv()
-    pr = ProfileReport(df, explorative=True)
-    st.header('**Input DataFrame**')
+    df = pd.read_csv(uploaded_file)
     st.write(df)
-    st.write('---')
-    st.header('**Sparta X Profiling Report**')
-    st_profile_report(pr)
+    build_model(df)
 else:
     st.info('Awaiting for CSV file to be uploaded.')
-
-
-    
     
